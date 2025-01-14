@@ -23,3 +23,29 @@ Cargo.lock
 # Added by cargo
 
 /target
+# Exclude all .idea files and folders
+.idea/
+
+# Ignore workspace.xml and other IDE-specific files
+*.iml
+*.iws
+*.ipr
+
+# Ignore logs and temporary files
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/vcs.xml
+.idea/jsLibraryMappings.xml
+
+# Ignore build artifacts and output directories
+out/
+build/
+target/
+
+# Ignore generated files from plugins
+.idea/.name
+.idea/modules.xml
+.idea/projectCodeStyle.xml
+.idea/inspectionProfiles/
+.idea/shelf/
