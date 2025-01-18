@@ -1,27 +1,17 @@
-use std::net::TcpListener;
-use {
-    axum::{routing::IntoMakeService, Router, Server},
-    hyper::server::conn::AddrIncoming,
-    tower_http::trace::TraceLayer,
-};
-
-use axum::body::BoxBody;
-use http::Response;
 use std::time::Duration;
-use tracing::Span;
 
-use hyper::{Body, Request};
-use tower_http::trace::DefaultOnRequest;
+use axum::{body::Body, Router};
+
+use tower_http::trace::{DefaultOnRequest, TraceLayer};
 use tower_request_id::RequestId;
 
-use tracing::Level;
+use http::Response;
+use hyper::Request;
+use tracing::{Level, Span};
 
-use crate::{
-    error::{AppError, Result},
-    routes,
-};
+use crate::{error::Result, routes};
 
-pub fn run(listener: TcpListener) -> Result<Server<AddrIncoming, IntoMakeService<Router>>> {
+pub fn create_app() -> Result<Router> {
     let router = routes::routes();
     let app = router
         .layer(
@@ -46,13 +36,11 @@ pub fn run(listener: TcpListener) -> Result<Server<AddrIncoming, IntoMakeService
             TraceLayer::new_for_http()
                 .make_span_with(|_request: &Request<Body>| tracing::info_span!("response"))
                 .on_response(
-                    |_response: &Response<BoxBody>, _latency: Duration, _span: &Span| {
+                    |_response: &Response<Body>, _latency: Duration, _span: &Span| {
                         tracing::info!("response generated");
                     },
                 ),
         );
 
-    Ok(axum::Server::from_tcp(listener)
-        .or(Err(AppError::TcpBind))?
-        .serve(app.into_make_service()))
+    Ok(app)
 }
