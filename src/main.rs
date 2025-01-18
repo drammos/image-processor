@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use image_processor::{
     config::CONFIG,
@@ -19,9 +19,13 @@ async fn main() -> Result<()> {
     // set the address
     let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), config.port);
     tracing::info!("Listening on {}", addr);
-    let listener = TcpListener::bind(addr).or(Err(AppError::TcpBind))?;
+    let listener = tokio::net::TcpListener::bind(addr)
+        .await
+        .map_err(|_err| AppError::TcpBind)?;
 
-    startup::run(listener)?
+    let app = startup::create_app()?;
+
+    axum::serve(listener, app.into_make_service())
         .await
         .map_err(|e| AppError::Startup(e.to_string()))?;
 
